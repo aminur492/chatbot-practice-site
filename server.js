@@ -2,8 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-app.use(cors()); // Allow all cross-origin requests
-app.use(express.json()); // Middleware to parse incoming JSON requests
+// Middleware to allow cross-origin requests
+app.use(cors());
+
+// Middleware to parse incoming JSON requests
+app.use(express.json());
 
 // Handle POST request to '/chat'
 app.post('/chat', (req, res) => {
