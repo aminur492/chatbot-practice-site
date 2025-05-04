@@ -67,18 +67,20 @@
   </div>
 
   <script>
+    // Function to send user message to backend and get bot response
     async function sendMessage() {
       const userInput = document.getElementById("userInput");
       const message = userInput.value.trim();
-      if (!message) return;
+      if (!message) return; // Avoid empty messages
 
       // Display user message
       const chatBox = document.getElementById("chatBox");
       chatBox.innerHTML += `<div class="message user">${message}</div>`;
 
-      userInput.value = "";
+      userInput.value = ""; // Clear the input field
 
       try {
+        // Send the user message to the backend (your server running at localhost:3000)
         const res = await fetch("http://localhost:3000/chat", {
           method: "POST",
           headers: {
@@ -87,10 +89,12 @@
           body: JSON.stringify({ message })
         });
 
+        // Handle the response from the server (chatbot)
         const data = await res.json();
         chatBox.innerHTML += `<div class="message bot">${data.response}</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom to show the latest message
       } catch (err) {
+        // If there's an error (e.g., no server running), show an error message
         chatBox.innerHTML += `<div class="message bot">Error: Couldn't connect to server</div>`;
       }
     }
