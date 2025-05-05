@@ -1,30 +1,49 @@
 const express = require('express');
-const cors = require('cors');
+const bodyParser = require('body-parser');
+const { SessionsClient } = require('@google-cloud/dialogflow');
+const uuid = require('uuid');
+
 const app = express();
+const port = 3000;
 
-// Middleware to allow cross-origin requests
-app.use(cors());
+// Create a Dialogflow session client
+const sessionClient = new SessionsClient();
 
-// Middleware to parse incoming JSON requests
-app.use(express.json());
+const projectId = 'your-google-cloud-project-id';  // Your Google Cloud Project ID
+const sessionId = uuid.v4(); // Generate a unique session ID
+const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
 
-// Handle POST request to '/chat'
-app.post('/chat', (req, res) => {
-  const userMessage = req.body.message; // Get the user's message
-  let botResponse = 'Sorry, I didn\'t understand that.'; // Default response
+app.use(bodyParser.json());
 
-  // Simple response logic based on the user's message
-  if (userMessage.toLowerCase() === 'hello') {
-    botResponse = 'Hi there! How can I assist you today?';
-  } else if (userMessage.toLowerCase() === 'bye') {
-    botResponse = 'Goodbye! Have a great day!';
+// Endpoint to handle chat messages
+app.post('/chat', async (req, res) => {
+  const message = req.body.message;
+
+  // Create a request to Dialogflow
+  const request = {
+    session: sessionPath,
+    queryInput: {
+      text: {
+        text: message,
+        languageCode: 'en',
+      },
+    },
+  };
+
+  try {
+    // Send the message to Dialogflow and get the response
+    const responses = await sessionClient.detectIntent(request);
+    const result = responses[0].queryResult;
+
+    // Send the response back to the client
+    res.json({ response: result.fulfillmentText });
+  } catch (err) {
+    console.error('ERROR:', err);
+    res.status(500).send('Error communicating with Dialogflow');
   }
-
-  // Send back the bot's response
-  res.json({ response: botResponse });
 });
 
-// Start the server on port 3000
-app.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });
